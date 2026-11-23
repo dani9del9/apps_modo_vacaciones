@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.icu.text.BreakIterator;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -25,11 +24,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.Collator;
 import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -163,75 +162,87 @@ public class AppPickerActivity extends Activity {
         VacationTileService.refresh(this);
     }
 
+    /** Selector de iconos como el de YTBox: "Todos" + categorías + buscador (nombres en inglés). */
     private void showIconPicker() {
+        final List<Emojis.Category> cats = Emojis.load(this);
         View v = LayoutInflater.from(this).inflate(R.layout.dialog_icon_picker, null);
         final GridView grid = v.findViewById(R.id.grid);
-        final EditText custom = v.findViewById(R.id.edtCustom);
-        final LinearLayout cats = v.findViewById(R.id.categories);
-        final ArrayAdapter<String> emojiAdapter = new ArrayAdapter<>(this, R.layout.item_emoji,
-                new ArrayList<>(Arrays.asList(Emojis.CATEGORIES[0])));
+        final EditText search = v.findViewById(R.id.edtSearch);
+        final TextView count = v.findViewById(R.id.txtCount);
+        final TextView empty = v.findViewById(R.id.txtEmpty);
+        final LinearLayout chipsBox = v.findViewById(R.id.categories);
+
+        final List<Emojis.Item> shownEmojis = new ArrayList<>();
+        final ArrayAdapter<String> emojiAdapter = new ArrayAdapter<>(this, R.layout.item_emoji, new ArrayList<>());
         grid.setAdapter(emojiAdapter);
 
+        // categoría elegida: [0] = null → "Todos"
+        final String[] selectedCat = {null};
         final List<TextView> chips = new ArrayList<>();
+        final int total = Emojis.total(cats);
+
+        final Runnable fill = () -> {
+            String q = search.getText().toString();
+            shownEmojis.clear();
+            shownEmojis.addAll(Emojis.filter(cats, selectedCat[0], q));
+            emojiAdapter.clear();
+            for (Emojis.Item it : shownEmojis) emojiAdapter.add(it.emoji);
+            grid.setSelection(0);
+            empty.setVisibility(shownEmojis.isEmpty() ? View.VISIBLE : View.GONE);
+            count.setText(q.trim().isEmpty()
+                    ? total + " emojis disponibles"
+                    : Util.plural(shownEmojis.size(), "resultado", "resultados"));
+        };
+
         float dp = getResources().getDisplayMetrics().density;
-        for (int i = 0; i < Emojis.CATEGORY_NAMES.length; i++) {
+        for (int i = -1; i < cats.size(); i++) {
             TextView chip = new TextView(this);
-            chip.setText(Emojis.CATEGORY_NAMES[i]);
+            chip.setText(i < 0 ? "Todos" : cats.get(i).items.get(0).emoji + " " + cats.get(i).label);
             chip.setTextSize(14);
             chip.setPadding((int) (14 * dp), (int) (8 * dp), (int) (14 * dp), (int) (8 * dp));
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.setMarginEnd((int) (6 * dp));
-            final int idx = i;
+            final String key = i < 0 ? null : cats.get(i).key;
+            final int chipIdx = i + 1;
             chip.setOnClickListener(c -> {
-                emojiAdapter.clear();
-                emojiAdapter.addAll(Emojis.CATEGORIES[idx]);
-                grid.setSelection(0);
-                styleChips(chips, idx);
+                selectedCat[0] = key;
+                search.setText(""); // como en YTBox: elegir categoría muestra esa categoría entera
+                styleChips(chips, chipIdx);
+                fill.run();
             });
             chips.add(chip);
-            cats.addView(chip, lp);
+            chipsBox.addView(chip, lp);
         }
         styleChips(chips, 0);
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) { fill.run(); }
+        });
+        fill.run();
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Icono del grupo")
                 .setView(v)
-                .setPositiveButton("Usar el escrito", (d, w) -> {
-                    String t = firstGrapheme(custom.getText().toString().trim());
-                    if (!t.isEmpty()) setIcon(t);
-                })
                 .setNegativeButton("Cancelar", null)
                 .create();
         grid.setOnItemClickListener((parent, view, position, id) -> {
-            setIcon(emojiAdapter.getItem(position));
+            setIcon(shownEmojis.get(position).emoji);
             dialog.dismiss();
         });
+        // Mantener pulsado: ver el nombre del emoji (útil para saber qué buscar)
+        grid.setOnItemLongClickListener((parent, view, position, id) -> {
+            Toast.makeText(this, shownEmojis.get(position).name, Toast.LENGTH_SHORT).show();
+            return true;
+        });
         dialog.show();
-    }
-
-    private void styleChips(List<TextView> chips, int selectedIdx) {
-        for (int i = 0; i < chips.size(); i++) {
-            TextView c = chips.get(i);
-            boolean on = i == selectedIdx;
-            c.setBackgroundResource(on ? R.drawable.bg_btn_sun : R.drawable.bg_btn_soft);
-            c.setTextColor(getColor(on ? R.color.on_primary : R.color.soft_text));
-            c.setTypeface(null, on ? Typeface.BOLD : Typeface.NORMAL);
-        }
     }
 
     private void setIcon(String icon) {
         group.icon = icon;
         btnIcon.setText(icon);
-    }
-
-    /** Primer "carácter visible" (un emoji compuesto cuenta como uno). */
-    private static String firstGrapheme(String s) {
-        if (s.isEmpty()) return s;
-        BreakIterator it = BreakIterator.getCharacterInstance();
-        it.setText(s);
-        int end = it.next();
-        return end == BreakIterator.DONE ? s : s.substring(0, end);
     }
 
     private void updateCount() {

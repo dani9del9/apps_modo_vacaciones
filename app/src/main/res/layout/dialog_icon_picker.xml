@@ -7,10 +7,34 @@
     android:paddingTop="8dp"
     android:paddingEnd="16dp">
 
+    <EditText
+        android:id="@+id/edtSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_search"
+        android:hint="🔍  Buscar en inglés (cat, music, car, fire…)"
+        android:imeOptions="actionSearch"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:padding="12dp"
+        android:singleLine="true"
+        android:textColor="@color/text"
+        android:textColorHint="@color/sub"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/txtCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/sub"
+        android:textSize="12sp" />
+
     <!-- Categorías (se rellenan desde el código) -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
         android:scrollbars="none">
 
         <LinearLayout
@@ -20,25 +44,32 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
-    <GridView
-        android:id="@+id/grid"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:horizontalSpacing="2dp"
-        android:numColumns="6"
-        android:stretchMode="columnWidth"
-        android:verticalSpacing="2dp" />
+        android:layout_height="320dp"
+        android:layout_marginTop="8dp">
 
-    <EditText
-        android:id="@+id/edtCustom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="…o escribe cualquier emoji del teclado"
-        android:importantForAutofill="no"
-        android:inputType="text"
-        android:singleLine="true"
-        android:textSize="18sp" />
+        <GridView
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fastScrollEnabled="true"
+            android:gravity="center"
+            android:horizontalSpacing="2dp"
+            android:numColumns="6"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="2dp" />
+
+        <TextView
+            android:id="@+id/txtEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="Sin resultados. Prueba con otra palabra en inglés."
+            android:textColor="@color/sub"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

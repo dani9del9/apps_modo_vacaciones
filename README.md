@@ -4,7 +4,7 @@ App Android que quita las notificaciones de las apps que elijas desde que la act
 
 ## Qué hace
 
-- **Grupos de apps**: crea grupos con nombre e icono (p. ej. «💬 Redes sociales», «💼 Trabajo») y añade las apps de cada uno desde una lista con buscador. En la pantalla principal marcas con un check qué grupos se silencian.
+- **Grupos de apps**: crea grupos con nombre e icono (más de 1.400 emojis con buscador, el mismo catálogo que YTBox) (p. ej. «💬 Redes sociales», «💼 Trabajo») y añade las apps de cada uno desde una lista con buscador. En la pantalla principal marcas con un check qué grupos se silencian.
 - **Activar / desactivar** con un botón o desde el mosaico **«Vacaciones»** de ajustes rápidos.
 - **Fecha y hora de fin**: se apaga sola en el momento que elijas.
 - **Mientras estabas fuera**: al volver puedes ver todas las notificaciones quitadas (agrupadas por app, con su contenido). Se guardan solo en el móvil.
