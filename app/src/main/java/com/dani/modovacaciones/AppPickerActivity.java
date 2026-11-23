@@ -240,6 +240,16 @@ public class AppPickerActivity extends Activity {
         dialog.show();
     }
 
+    private void styleChips(List<TextView> chips, int selectedIdx) {
+        for (int i = 0; i < chips.size(); i++) {
+            TextView c = chips.get(i);
+            boolean on = i == selectedIdx;
+            c.setBackgroundResource(on ? R.drawable.bg_btn_sun : R.drawable.bg_btn_soft);
+            c.setTextColor(getColor(on ? R.color.on_primary : R.color.soft_text));
+            c.setTypeface(null, on ? Typeface.BOLD : Typeface.NORMAL);
+        }
+    }
+
     private void setIcon(String icon) {
         group.icon = icon;
         btnIcon.setText(icon);
