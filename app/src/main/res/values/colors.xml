@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FFF6EC</color>
+    <color name="card">#FFFFFF</color>
+    <color name="text">#24303A</color>
+    <color name="sub">#6E7882</color>
+    <color name="sun">#FF7A45</color>
+    <color name="sea">#1A9DB0</color>
+    <color name="soft">#FFE6D9</color>
+    <color name="soft_text">#D4531F</color>
+    <color name="line">#EADFD3</color>
+    <color name="warn">#B3541E</color>
+</resources>
