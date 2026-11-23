@@ -4,4 +4,5 @@
     android:layout_height="52dp"
     android:background="?android:attr/selectableItemBackgroundBorderless"
     android:gravity="center"
+    android:textColor="#FF000000"
     android:textSize="26sp" />

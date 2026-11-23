@@ -1,6 +1,7 @@
 package com.dani.modovacaciones;
 
 import android.content.Context;
+import android.graphics.Paint;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,15 +55,19 @@ public final class Emojis {
             int n;
             while ((n = in.read(b)) > 0) buf.write(b, 0, n);
             JSONArray arr = new JSONArray(new String(buf.toByteArray(), StandardCharsets.UTF_8));
+            // Solo los emojis que la fuente del móvil sabe dibujar (los demás saldrían como un cuadro vacío)
+            Paint paint = new Paint();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = arr.getJSONObject(i);
                 JSONArray items = o.getJSONArray("items");
                 List<Item> list = new ArrayList<>(items.length());
                 for (int j = 0; j < items.length(); j++) {
                     JSONArray it = items.getJSONArray(j);
-                    list.add(new Item(it.getString(0), it.optString(1, "")));
+                    String emoji = it.getString(0);
+                    if (!paint.hasGlyph(emoji)) continue;
+                    list.add(new Item(emoji, it.optString(1, "")));
                 }
-                out.add(new Category(o.getString("key"), o.getString("label"), list));
+                if (!list.isEmpty()) out.add(new Category(o.getString("key"), o.getString("label"), list));
             }
         } catch (Exception ignored) {
         }

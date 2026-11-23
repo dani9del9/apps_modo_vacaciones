@@ -15,6 +15,7 @@
         android:layout_height="46dp"
         android:background="@drawable/bg_icon_circle"
         android:gravity="center"
+        android:textColor="#FF000000"
         android:textSize="22sp" />
 
     <LinearLayout

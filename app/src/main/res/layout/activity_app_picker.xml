@@ -67,6 +67,7 @@
             android:contentDescription="Cambiar icono"
             android:foreground="?android:attr/selectableItemBackgroundBorderless"
             android:gravity="center"
+            android:textColor="#FF000000"
             android:textSize="28sp" />
 
         <EditText
