@@ -47,15 +47,17 @@ public class VacationNotificationListener extends NotificationListenerService {
         Set<String> blocked = Prefs.getBlocked(this);
         if (!blocked.contains(pkg)) return;
 
-        try {
-            cancelNotification(sbn.getKey());
-        } catch (Exception ignored) {
-        }
-
+        // Guardar el contenido para poder verlo al volver (solo lo que llega durante el modo vacaciones)
         Notification n = sbn.getNotification();
         boolean isSummary = n != null && (n.flags & Notification.FLAG_GROUP_SUMMARY) != 0;
         if (count && !isSummary && !sbn.isOngoing()) {
-            Prefs.incrementCount(this, pkg);
+            int added = History.add(this, sbn);
+            if (added > 0) Prefs.incrementCount(this, pkg, added);
+        }
+
+        try {
+            cancelNotification(sbn.getKey());
+        } catch (Exception ignored) {
         }
     }
 

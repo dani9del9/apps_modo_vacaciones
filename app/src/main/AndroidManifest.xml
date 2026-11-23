@@ -36,6 +36,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+
         <!-- Servicio que recibe las notificaciones del sistema y quita las de las apps marcadas -->
         <service
             android:name=".VacationNotificationListener"

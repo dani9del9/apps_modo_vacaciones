@@ -57,7 +57,9 @@
 
             <TextView
                 style="@style/CardTitle"
-                android:text="⚠️ Falta un permiso"
+                android:drawableStart="@drawable/ic_warn"
+                android:drawableTint="@color/warn"
+                android:text="Falta un permiso"
                 android:textColor="@color/warn" />
 
             <TextView
@@ -99,7 +101,8 @@
 
             <TextView
                 style="@style/CardTitle"
-                android:text="🔕 Apps silenciadas" />
+                android:drawableStart="@drawable/ic_bell_off"
+                android:text="Apps silenciadas" />
 
             <TextView
                 android:id="@+id/txtAppsSummary"
@@ -118,7 +121,8 @@
 
             <TextView
                 style="@style/CardTitle"
-                android:text="📅 Desactivar automáticamente" />
+                android:drawableStart="@drawable/ic_calendar"
+                android:text="Desactivar automáticamente" />
 
             <TextView
                 android:id="@+id/txtEndTime"
@@ -170,11 +174,19 @@
 
             <TextView
                 android:id="@+id/txtStatsTitle"
-                style="@style/CardTitle" />
+                style="@style/CardTitle"
+                android:drawableStart="@drawable/ic_inbox" />
 
             <TextView
                 android:id="@+id/txtStats"
                 style="@style/Body" />
+
+            <Button
+                android:id="@+id/btnHistory"
+                style="@style/Btn.Soft"
+                android:layout_width="match_parent"
+                android:layout_marginTop="14dp"
+                android:text="Ver notificaciones" />
         </LinearLayout>
 
         <TextView

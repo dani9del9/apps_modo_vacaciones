@@ -9,6 +9,7 @@ public final class VacationController {
 
     public static void activate(Context c) {
         Prefs.clearCounts(c);
+        History.clear(c);
         Prefs.setActive(c, true);
         long end = Prefs.getEndTime(c);
         if (end > 0 && end <= System.currentTimeMillis()) Prefs.setEndTime(c, 0);

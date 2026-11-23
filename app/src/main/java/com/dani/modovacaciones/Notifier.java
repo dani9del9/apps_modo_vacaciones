@@ -39,6 +39,12 @@ public final class Notifier {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    private static PendingIntent openHistory(Context c) {
+        Intent i = new Intent(c, HistoryActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return PendingIntent.getActivity(c, 4, i,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
     private static void post(Context c, int id, Notification n) {
         try {
             NotificationManager nm = nm(c);
@@ -65,7 +71,7 @@ public final class Notifier {
         String text = total == 0
                 ? "No llegó ninguna notificación de las apps silenciadas."
                 : "Se quitaron " + Util.plural(total, "notificación", "notificaciones")
-                + ": " + Util.countsSummary(c, counts, 6);
+                + ": " + Util.countsSummary(c, counts, 6) + ".\nToca para verlas.";
 
         Notification notif = new Notification.Builder(c, CH_INFO)
                 .setSmallIcon(R.drawable.ic_stat_palm)
@@ -74,7 +80,7 @@ public final class Notifier {
                 .setStyle(new Notification.BigTextStyle().bigText(text))
                 .setColor(0xFF239A83)
                 .setAutoCancel(true)
-                .setContentIntent(openApp(c))
+                .setContentIntent(total > 0 ? openHistory(c) : openApp(c))
                 .build();
         post(c, ID_FINISHED, notif);
     }

@@ -29,7 +29,7 @@ public class MainActivity extends Activity {
 
     private TextView txtStatus, txtAppsSummary, txtEndTime, txtExactHint, txtStatsTitle, txtStats;
     private View cardPermission, cardStats;
-    private Button btnToggle, btnClearDate, btnExactPerm;
+    private Button btnToggle, btnClearDate, btnExactPerm, btnHistory;
     private BellView bellView;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -58,6 +58,8 @@ public class MainActivity extends Activity {
         bellView = findViewById(R.id.bellView);
         btnClearDate = findViewById(R.id.btnClearDate);
         btnExactPerm = findViewById(R.id.btnExactPerm);
+        btnHistory = findViewById(R.id.btnHistory);
+        btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
 
         btnToggle.setOnClickListener(v -> toggle());
         findViewById(R.id.btnGrantAccess).setOnClickListener(v -> openListenerSettings());
@@ -241,14 +243,16 @@ public class MainActivity extends Activity {
         txtExactHint.setVisibility(showExact ? View.VISIBLE : View.GONE);
         btnExactPerm.setVisibility(showExact ? View.VISIBLE : View.GONE);
 
-        // Estadísticas
+        // Estadísticas + historial
         Map<String, Integer> counts = Prefs.getCounts(this);
         int total = Util.total(counts);
-        if (total > 0) {
+        boolean hasHistory = !History.isEmpty(this);
+        if (total > 0 || hasHistory) {
             cardStats.setVisibility(View.VISIBLE);
-            txtStatsTitle.setText(active ? "🧹 Quitadas hasta ahora" : "🧹 La última vez se quitaron");
+            txtStatsTitle.setText(active ? "Quitadas hasta ahora" : "Mientras estabas fuera");
             txtStats.setText(Util.plural(total, "notificación", "notificaciones") + "\n"
                     + Util.countsSummary(this, counts, 8));
+            btnHistory.setVisibility(hasHistory ? View.VISIBLE : View.GONE);
         } else {
             cardStats.setVisibility(View.GONE);
         }

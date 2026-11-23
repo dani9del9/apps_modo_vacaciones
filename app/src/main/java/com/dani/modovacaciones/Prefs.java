@@ -62,8 +62,12 @@ public final class Prefs {
     }
 
     public static synchronized void incrementCount(Context c, String pkg) {
+        incrementCount(c, pkg, 1);
+    }
+
+    public static synchronized void incrementCount(Context c, String pkg, int n) {
         SharedPreferences s = stats(c);
-        s.edit().putInt(pkg, s.getInt(pkg, 0) + 1).apply();
+        s.edit().putInt(pkg, s.getInt(pkg, 0) + n).apply();
     }
 
     public static Map<String, Integer> getCounts(Context c) {
