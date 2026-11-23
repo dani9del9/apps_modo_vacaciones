@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
     private TextView txtStatus, txtAppsSummary, txtEndTime, txtExactHint, txtStatsTitle, txtStats;
     private View cardPermission, cardStats;
     private Button btnToggle, btnClearDate, btnExactPerm;
+    private BellView bellView;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable ticker = new Runnable() {
@@ -54,6 +55,7 @@ public class MainActivity extends Activity {
         cardPermission = findViewById(R.id.cardPermission);
         cardStats = findViewById(R.id.cardStats);
         btnToggle = findViewById(R.id.btnToggle);
+        bellView = findViewById(R.id.bellView);
         btnClearDate = findViewById(R.id.btnClearDate);
         btnExactPerm = findViewById(R.id.btnExactPerm);
 
@@ -192,6 +194,8 @@ public class MainActivity extends Activity {
         Set<String> blocked = Prefs.getBlocked(this);
 
         cardPermission.setVisibility(access ? View.GONE : View.VISIBLE);
+        // La primera vez se pinta sin animación; después, cada cambio de estado se anima
+        bellView.setSleeping(active, true);
 
         if (active) {
             txtStatus.setText(end > 0
@@ -199,10 +203,12 @@ public class MainActivity extends Activity {
                     : "🟢 Activo · hasta que lo apagues");
             btnToggle.setText("Desactivar modo vacaciones");
             btnToggle.setBackgroundResource(R.drawable.bg_btn_sea);
+            btnToggle.setTextColor(getColor(R.color.on_accent));
         } else {
             txtStatus.setText("⚪ Apagado · te llegan todas las notificaciones");
             btnToggle.setText("Activar modo vacaciones");
             btnToggle.setBackgroundResource(R.drawable.bg_btn_sun);
+            btnToggle.setTextColor(getColor(R.color.on_primary));
         }
 
         // Apps

@@ -6,7 +6,9 @@
     <color name="sub">#93ADA7</color>
     <color name="sun">#5FD3BB</color>
     <color name="sea">#FF8A5B</color>
-    <color name="on_primary">#0F1C1A</color>
+    <color name="brand">#7ED6C1</color>
+    <color name="on_primary">#10423A</color>
+    <color name="on_accent">#0F1C1A</color>
     <color name="soft">#1F3934</color>
     <color name="soft_text">#7EE0CB</color>
     <color name="line">#24403B</color>

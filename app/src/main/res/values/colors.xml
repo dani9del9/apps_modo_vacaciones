@@ -8,7 +8,10 @@
     <!-- sun = color principal (menta), sea = color de acento (coral) -->
     <color name="sun">#239A83</color>
     <color name="sea">#F2683A</color>
-    <color name="on_primary">#FFFFFF</color>
+    <!-- brand = menta del logo (botón de activar) -->
+    <color name="brand">#7ED6C1</color>
+    <color name="on_primary">#10423A</color>
+    <color name="on_accent">#FFFFFF</color>
     <color name="soft">#DDF4EE</color>
     <color name="soft_text">#1C7F6C</color>
     <color name="line">#D3E9E3</color>

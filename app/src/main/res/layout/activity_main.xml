@@ -19,11 +19,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <ImageView
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:contentDescription="@null"
-                android:src="@mipmap/ic_launcher" />
+            <com.dani.modovacaciones.BellView
+                android:id="@+id/bellView"
+                android:layout_width="68dp"
+                android:layout_height="68dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
