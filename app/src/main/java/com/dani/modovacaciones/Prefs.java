@@ -18,6 +18,7 @@ public final class Prefs {
     private static final String K_SINCE = "active_since";
     private static final String K_BLOCKED = "blocked";
     private static final String K_END = "end_time";
+    private static final String K_PENDING = "pending_countdown";
 
     private Prefs() {}
 
@@ -44,12 +45,14 @@ public final class Prefs {
         return p(c).getLong(K_SINCE, 0L);
     }
 
+    /** Apps que se silencian: las de los grupos marcados. */
     public static Set<String> getBlocked(Context c) {
-        return new HashSet<>(p(c).getStringSet(K_BLOCKED, Collections.<String>emptySet()));
+        return Groups.blockedApps(c);
     }
 
-    public static void setBlocked(Context c, Set<String> pkgs) {
-        p(c).edit().putStringSet(K_BLOCKED, new HashSet<>(pkgs)).apply();
+    /** Apps elegidas en la versión sin grupos (solo para migrarlas a un grupo). */
+    static Set<String> getLegacyBlocked(Context c) {
+        return new HashSet<>(p(c).getStringSet(K_BLOCKED, Collections.<String>emptySet()));
     }
 
     /** 0 = sin fecha de fin. */
@@ -59,6 +62,15 @@ public final class Prefs {
 
     public static void setEndTime(Context c, long millis) {
         p(c).edit().putLong(K_END, millis).apply();
+    }
+
+    /** Cuenta atrás elegida con el modo apagado: empieza a contar al activarlo (0 = ninguna). */
+    public static long getPendingCountdown(Context c) {
+        return p(c).getLong(K_PENDING, 0L);
+    }
+
+    public static void setPendingCountdown(Context c, long millis) {
+        p(c).edit().putLong(K_PENDING, millis).apply();
     }
 
     public static synchronized void incrementCount(Context c, String pkg) {

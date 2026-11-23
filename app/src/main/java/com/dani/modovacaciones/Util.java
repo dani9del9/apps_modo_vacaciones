@@ -71,6 +71,17 @@ public final class Util {
         return "en " + m + " min";
     }
 
+    /** "45 min", "2 h 30 min", "1 d 2 h" */
+    public static String formatDuration(long ms) {
+        long totalMin = Math.max(1, (ms + 30_000) / 60_000);
+        long d = totalMin / 1440;
+        long h = (totalMin % 1440) / 60;
+        long m = totalMin % 60;
+        if (d > 0) return d + " d" + (h > 0 ? " " + h + " h" : "");
+        if (h > 0) return h + " h" + (m > 0 ? " " + m + " min" : "");
+        return m + " min";
+    }
+
     public static int total(Map<String, Integer> counts) {
         int t = 0;
         for (int v : counts.values()) t += v;

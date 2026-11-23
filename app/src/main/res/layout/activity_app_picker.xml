@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:paddingStart="6dp"
         android:paddingTop="8dp"
-        android:paddingEnd="20dp"
+        android:paddingEnd="12dp"
         android:paddingBottom="8dp">
 
         <TextView
@@ -27,13 +27,91 @@
             android:textSize="24sp" />
 
         <TextView
+            android:id="@+id/txtTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="Elegir apps"
             android:textColor="@color/text"
             android:textSize="21sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="Borrar"
+            android:textColor="@color/warn"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Icono + nombre -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnIcon"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_icon_circle"
+            android:contentDescription="Cambiar icono"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:textSize="28sp" />
+
+        <EditText
+            android:id="@+id/edtName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_search"
+            android:hint="Nombre del grupo (p. ej. Redes sociales)"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences"
+            android:maxLength="40"
+            android:padding="14dp"
+            android:singleLine="true"
+            android:textColor="@color/text"
+            android:textColorHint="@color/sub"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:text="Toca el icono para cambiarlo"
+        android:textColor="@color/sub"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Apps del grupo"
+            android:textColor="@color/text"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
@@ -50,7 +128,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="6dp"
         android:background="@drawable/bg_search"
         android:hint="🔍  Buscar app…"
         android:imeOptions="actionSearch"
@@ -61,31 +141,6 @@
         android:textColor="@color/text"
         android:textColorHint="@color/sub"
         android:textSize="16sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="6dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btnAll"
-            style="@style/Btn.Soft"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:text="Marcar todas" />
-
-        <Button
-            android:id="@+id/btnNone"
-            style="@style/Btn.Soft"
-            android:layout_width="0dp"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:text="Desmarcar todas" />
-    </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -113,5 +168,5 @@
         style="@style/Btn.Primary"
         android:layout_width="match_parent"
         android:layout_margin="16dp"
-        android:text="Listo" />
+        android:text="Guardar grupo" />
 </LinearLayout>

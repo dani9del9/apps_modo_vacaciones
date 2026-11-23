@@ -29,7 +29,13 @@ public class BellView extends View {
     private static final int ZZZ = 0xFFF2683A;
 
     private static final long CLOSE_MS = 450;
-    private static final long SNORE_MS = 3200;  // una respiración completa
+    // Un ciclo de ronquido: inspira (sin z) y al espirar sale una ráfaga "zzz".
+    // Entre el final de una ráfaga y el principio de la siguiente pasa 1 segundo.
+    private static final long INHALE_MS = 2100;
+    private static final long EXHALE_MS = 900;
+    private static final long SNORE_MS = INHALE_MS + EXHALE_MS;
+    private static final long Z_STAGGER_MS = 300;   // separación entre las z de una ráfaga
+    private static final long Z_LIFE_MS = 1400;     // lo que tarda cada z en subir y desvanecerse
     private static final long WAKE_MS = 900;
     private static final int Z_COUNT = 3;
 
@@ -157,9 +163,10 @@ public class BellView extends View {
         anim.addUpdateListener(a -> {
             float f = a.getAnimatedFraction();
             snorePhase = f;
-            // Inspira despacio (60 %) y espira más rápido (40 %), como un ronquido
-            if (f < 0.6f) breath = smooth(f / 0.6f);
-            else breath = 1f - smooth((f - 0.6f) / 0.4f);
+            float t = f * SNORE_MS;
+            // Inspira despacio y espira más rápido, como un ronquido
+            if (t < INHALE_MS) breath = smooth(t / INHALE_MS);
+            else breath = 1f - smooth((t - INHALE_MS) / EXHALE_MS);
             if (zFade < 1f) zFade = clamp((System.currentTimeMillis() - start) / 800f);
             invalidate();
         });
@@ -248,11 +255,14 @@ public class BellView extends View {
         }
         canvas.restore();
 
-        // Zzz en bucle: cada z recorre su camino escalonada respecto a las demás
+        // Ráfaga "zzz" al espirar; la ráfaga puede pasar al ciclo siguiente (se calcula en módulo)
         if (snorePhase >= 0f) {
+            float t = snorePhase * SNORE_MS;
             for (int i = 0; i < Z_COUNT; i++) {
-                float p = snorePhase + (float) i / Z_COUNT;
-                p -= (float) Math.floor(p);
+                float local = t - INHALE_MS - i * Z_STAGGER_MS;
+                local = ((local % SNORE_MS) + SNORE_MS) % SNORE_MS;
+                if (local > Z_LIFE_MS) continue;
+                float p = local / Z_LIFE_MS;
                 float alpha = p < 0.2f ? p / 0.2f : 1f - (p - 0.2f) / 0.8f;
                 zPaint.setAlpha((int) (255 * clamp(alpha) * zFade));
                 zPaint.setTextSize(9f + p * 9f);

@@ -4,10 +4,10 @@ App Android que quita las notificaciones de las apps que elijas desde que la act
 
 ## Qué hace
 
-- **Selector de apps**: lista todas las apps instaladas (con icono y buscador) para marcar las que no quieres que te molesten.
+- **Grupos de apps**: crea grupos con nombre e icono (p. ej. «💬 Redes sociales», «💼 Trabajo») y añade las apps de cada uno desde una lista con buscador. En la pantalla principal marcas con un check qué grupos se silencian.
 - **Activar / desactivar** con un botón o desde el mosaico **«Vacaciones»** de ajustes rápidos.
 - **Fecha y hora de fin**: se apaga sola en el momento que elijas.
-- **Resumen** al terminar: cuántas notificaciones se quitaron y de qué apps.
+- **Mientras estabas fuera**: al volver puedes ver todas las notificaciones quitadas (agrupadas por app, con su contenido). Se guardan solo en el móvil.
 - Sobrevive a reinicios del móvil.
 
 Cómo funciona: usa el permiso de *Acceso a notificaciones* (`NotificationListenerService`). Cuando llega una notificación de una app marcada, la quita al momento. Al activarlo también limpia las que ya estaban en la barra. Las notificaciones fijas (música, llamadas en curso…) no se pueden quitar.
@@ -26,7 +26,7 @@ El APK va firmado con `app/keystore/modovacaciones.p12` (incluido en el repo) pa
 1. Instala el APK.
 2. Abre la app → **Dar acceso a notificaciones** y activa *Modo vacaciones*.
    - En Android 13 o superior, si sale en gris / «Ajuste restringido»: *Info de la app* → **⋮** → **Permitir ajustes restringidos**, y vuelve a intentarlo.
-3. **Elegir apps** → marca las que quieras silenciar.
+3. **Nuevo grupo** → ponle nombre, icono y sus apps. Marca los grupos que quieras silenciar.
 4. (Opcional) **Elegir fecha y hora** para que se apague solo. Si la app te lo sugiere, concede *Alarmas y recordatorios* para que el aviso de fin sea puntual.
 5. **Activar modo vacaciones**.
 

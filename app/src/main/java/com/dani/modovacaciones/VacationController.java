@@ -11,6 +11,12 @@ public final class VacationController {
         Prefs.clearCounts(c);
         History.clear(c);
         Prefs.setActive(c, true);
+        long pending = Prefs.getPendingCountdown(c);
+        if (pending > 0) {
+            // La cuenta atrás empieza ahora
+            Prefs.setEndTime(c, System.currentTimeMillis() + pending);
+            Prefs.setPendingCountdown(c, 0);
+        }
         long end = Prefs.getEndTime(c);
         if (end > 0 && end <= System.currentTimeMillis()) Prefs.setEndTime(c, 0);
 
@@ -49,7 +55,19 @@ public final class VacationController {
         return true;
     }
 
+    /** Cuenta atrás: si está activo, cuenta desde ya; si no, empieza a contar al activarlo. */
+    public static void setCountdown(Context c, long durationMs) {
+        if (Prefs.isActive(c)) {
+            setEndTime(c, System.currentTimeMillis() + durationMs);
+        } else {
+            Prefs.setEndTime(c, 0);
+            Prefs.setPendingCountdown(c, durationMs);
+            VacationTileService.refresh(c);
+        }
+    }
+
     public static void setEndTime(Context c, long millis) {
+        Prefs.setPendingCountdown(c, 0);
         Prefs.setEndTime(c, millis);
         if (Prefs.isActive(c)) {
             Scheduler.schedule(c);

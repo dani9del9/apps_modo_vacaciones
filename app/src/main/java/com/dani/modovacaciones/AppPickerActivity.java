@@ -1,21 +1,27 @@
 package com.dani.modovacaciones;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.icu.text.BreakIterator;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,6 +29,7 @@ import android.widget.TextView;
 import java.text.Collator;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -30,8 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Lista de todas las apps instaladas con casilla para marcar las que se silencian. */
+/** Crear o editar un grupo: nombre, icono y apps que lo forman. */
 public class AppPickerActivity extends Activity {
+
+    public static final String EXTRA_GROUP_ID = "group_id";
 
     private static final class AppEntry {
         final String pkg;
@@ -49,11 +58,14 @@ public class AppPickerActivity extends Activity {
 
     private final List<AppEntry> all = new ArrayList<>();
     private final List<AppEntry> shown = new ArrayList<>();
-    private Set<String> selected;
+    private final Set<String> selected = new HashSet<>();
+
+    private Groups.Group group;
+    private boolean editing;
 
     private AppAdapter adapter;
-    private TextView txtCount;
-    private EditText edtSearch;
+    private TextView txtCount, btnIcon;
+    private EditText edtName, edtSearch;
     private ProgressBar progress;
 
     @Override
@@ -61,19 +73,50 @@ public class AppPickerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_picker);
 
-        selected = Prefs.getBlocked(this);
+        group = Groups.get(this, getIntent().getStringExtra(EXTRA_GROUP_ID));
+        editing = group != null;
+        if (group == null) {
+            group = new Groups.Group();
+            group.id = Groups.newId();
+            group.name = "";
+            group.icon = Groups.DEFAULT_ICON;
+            group.enabled = true;
+        }
+        selected.addAll(group.apps);
+
         txtCount = findViewById(R.id.txtCount);
+        btnIcon = findViewById(R.id.btnIcon);
+        edtName = findViewById(R.id.edtName);
         edtSearch = findViewById(R.id.edtSearch);
         progress = findViewById(R.id.progress);
         ListView list = findViewById(R.id.list);
+
+        ((TextView) findViewById(R.id.txtTitle)).setText(editing ? "Editar grupo" : "Nuevo grupo");
+        edtName.setText(group.name);
+        btnIcon.setText(group.icon);
+
+        View btnDelete = findViewById(R.id.btnDelete);
+        btnDelete.setVisibility(editing ? View.VISIBLE : View.GONE);
+        btnDelete.setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle("Borrar grupo")
+                .setMessage("¿Borrar el grupo «" + group.name + "»? Las apps no se tocan.")
+                .setPositiveButton("Borrar", (d, w) -> {
+                    Groups.delete(this, group.id);
+                    afterChange();
+                    finish();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show());
+
+        btnIcon.setOnClickListener(v -> showIconPicker());
 
         adapter = new AppAdapter();
         list.setAdapter(adapter);
         list.setOnItemClickListener((parent, view, position, id) -> {
             AppEntry e = shown.get(position);
             if (!selected.remove(e.pkg)) selected.add(e.pkg);
-            save();
             adapter.notifyDataSetChanged();
+            updateCount();
         });
 
         edtSearch.addTextChangedListener(new TextWatcher() {
@@ -82,31 +125,117 @@ public class AppPickerActivity extends Activity {
             @Override public void afterTextChanged(Editable s) { applyFilter(); }
         });
 
-        findViewById(R.id.btnAll).setOnClickListener(v -> {
-            for (AppEntry e : shown) selected.add(e.pkg);
-            save();
-            adapter.notifyDataSetChanged();
-        });
-        findViewById(R.id.btnNone).setOnClickListener(v -> {
-            for (AppEntry e : shown) selected.remove(e.pkg);
-            save();
-            adapter.notifyDataSetChanged();
-        });
-        findViewById(R.id.btnDone).setOnClickListener(v -> finish());
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        findViewById(R.id.btnDone).setOnClickListener(v -> saveAndFinish());
+        findViewById(R.id.btnBack).setOnClickListener(v -> saveAndFinish());
 
         updateCount();
         loadApps();
     }
 
-    private void save() {
-        Prefs.setBlocked(this, selected);
-        updateCount();
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onBackPressed() {
+        saveAndFinish();
+    }
+
+    /** Guarda y cierra. Un grupo nuevo sin nombre ni apps se descarta sin preguntar. */
+    private void saveAndFinish() {
+        String name = edtName.getText().toString().trim();
+        if (name.isEmpty()) {
+            if (!editing && selected.isEmpty()) {
+                finish();
+                return;
+            }
+            edtName.setError("Ponle un nombre al grupo");
+            edtName.requestFocus();
+            return;
+        }
+        group.name = name;
+        group.apps.clear();
+        group.apps.addAll(selected);
+        Groups.put(this, group);
+        afterChange();
+        finish();
+    }
+
+    private void afterChange() {
         if (Prefs.isActive(this)) VacationNotificationListener.cleanNow();
+        VacationTileService.refresh(this);
+    }
+
+    private void showIconPicker() {
+        View v = LayoutInflater.from(this).inflate(R.layout.dialog_icon_picker, null);
+        final GridView grid = v.findViewById(R.id.grid);
+        final EditText custom = v.findViewById(R.id.edtCustom);
+        final LinearLayout cats = v.findViewById(R.id.categories);
+        final ArrayAdapter<String> emojiAdapter = new ArrayAdapter<>(this, R.layout.item_emoji,
+                new ArrayList<>(Arrays.asList(Emojis.CATEGORIES[0])));
+        grid.setAdapter(emojiAdapter);
+
+        final List<TextView> chips = new ArrayList<>();
+        float dp = getResources().getDisplayMetrics().density;
+        for (int i = 0; i < Emojis.CATEGORY_NAMES.length; i++) {
+            TextView chip = new TextView(this);
+            chip.setText(Emojis.CATEGORY_NAMES[i]);
+            chip.setTextSize(14);
+            chip.setPadding((int) (14 * dp), (int) (8 * dp), (int) (14 * dp), (int) (8 * dp));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.setMarginEnd((int) (6 * dp));
+            final int idx = i;
+            chip.setOnClickListener(c -> {
+                emojiAdapter.clear();
+                emojiAdapter.addAll(Emojis.CATEGORIES[idx]);
+                grid.setSelection(0);
+                styleChips(chips, idx);
+            });
+            chips.add(chip);
+            cats.addView(chip, lp);
+        }
+        styleChips(chips, 0);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Icono del grupo")
+                .setView(v)
+                .setPositiveButton("Usar el escrito", (d, w) -> {
+                    String t = firstGrapheme(custom.getText().toString().trim());
+                    if (!t.isEmpty()) setIcon(t);
+                })
+                .setNegativeButton("Cancelar", null)
+                .create();
+        grid.setOnItemClickListener((parent, view, position, id) -> {
+            setIcon(emojiAdapter.getItem(position));
+            dialog.dismiss();
+        });
+        dialog.show();
+    }
+
+    private void styleChips(List<TextView> chips, int selectedIdx) {
+        for (int i = 0; i < chips.size(); i++) {
+            TextView c = chips.get(i);
+            boolean on = i == selectedIdx;
+            c.setBackgroundResource(on ? R.drawable.bg_btn_sun : R.drawable.bg_btn_soft);
+            c.setTextColor(getColor(on ? R.color.on_primary : R.color.soft_text));
+            c.setTypeface(null, on ? Typeface.BOLD : Typeface.NORMAL);
+        }
+    }
+
+    private void setIcon(String icon) {
+        group.icon = icon;
+        btnIcon.setText(icon);
+    }
+
+    /** Primer "carácter visible" (un emoji compuesto cuenta como uno). */
+    private static String firstGrapheme(String s) {
+        if (s.isEmpty()) return s;
+        BreakIterator it = BreakIterator.getCharacterInstance();
+        it.setText(s);
+        int end = it.next();
+        return end == BreakIterator.DONE ? s : s.substring(0, end);
     }
 
     private void updateCount() {
-        txtCount.setText(Util.plural(selected.size(), "marcada", "marcadas"));
+        txtCount.setText(Util.plural(selected.size(), "app", "apps"));
     }
 
     private void loadApps() {
@@ -137,7 +266,7 @@ public class AppPickerActivity extends Activity {
 
             final List<AppEntry> result = new ArrayList<>(byPkg.values());
             final Collator collator = Collator.getInstance(Util.ES);
-            // Las ya marcadas primero, luego alfabético
+            // Las del grupo primero, luego alfabético
             Collections.sort(result, (a, b) -> {
                 boolean sa = initiallySelected.contains(a.pkg);
                 boolean sb = initiallySelected.contains(b.pkg);

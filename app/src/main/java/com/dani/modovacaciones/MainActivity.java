@@ -12,15 +12,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.NumberPicker;
+import android.app.AlertDialog;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.Collator;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +32,7 @@ public class MainActivity extends Activity {
 
     private TextView txtStatus, txtAppsSummary, txtEndTime, txtExactHint, txtStatsTitle, txtStats;
     private View cardPermission, cardStats;
+    private ViewGroup groupsContainer;
     private Button btnToggle, btnClearDate, btnExactPerm, btnHistory;
     private BellView bellView;
 
@@ -59,15 +63,17 @@ public class MainActivity extends Activity {
         btnClearDate = findViewById(R.id.btnClearDate);
         btnExactPerm = findViewById(R.id.btnExactPerm);
         btnHistory = findViewById(R.id.btnHistory);
+        groupsContainer = findViewById(R.id.groupsContainer);
         btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
 
         btnToggle.setOnClickListener(v -> toggle());
         findViewById(R.id.btnGrantAccess).setOnClickListener(v -> openListenerSettings());
         findViewById(R.id.btnAppInfo).setOnClickListener(v -> openAppInfo());
-        findViewById(R.id.btnChooseApps).setOnClickListener(v -> openPicker());
+        findViewById(R.id.btnNewGroup).setOnClickListener(v -> openGroup(null));
         findViewById(R.id.btnPickDate).setOnClickListener(v -> pickDateTime());
+        findViewById(R.id.btnCountdown).setOnClickListener(v -> showCountdownDialog());
         btnClearDate.setOnClickListener(v -> {
-            VacationController.setEndTime(this, 0);
+            VacationController.setEndTime(this, 0); // también quita la cuenta atrás pendiente
             refreshUi();
         });
         btnExactPerm.setOnClickListener(v -> {
@@ -91,6 +97,7 @@ public class MainActivity extends Activity {
             Scheduler.schedule(this); // por si ha cambiado el permiso de alarmas exactas
             VacationNotificationListener.cleanNow();
         }
+        renderGroups();
         handler.removeCallbacks(ticker);
         handler.post(ticker);
     }
@@ -114,8 +121,12 @@ public class MainActivity extends Activity {
                 return;
             }
             if (Prefs.getBlocked(this).isEmpty()) {
-                toast("Elige al menos una app para silenciar");
-                openPicker();
+                if (Groups.getAll(this).isEmpty()) {
+                    toast("Crea un grupo con las apps que quieres silenciar");
+                    openGroup(null);
+                } else {
+                    toast("Marca al menos un grupo que tenga apps");
+                }
                 return;
             }
             VacationController.activate(this);
@@ -124,8 +135,48 @@ public class MainActivity extends Activity {
         refreshUi();
     }
 
-    private void openPicker() {
-        startActivity(new Intent(this, AppPickerActivity.class));
+    /** Abre el editor de grupos: id == null para crear uno nuevo. */
+    private void openGroup(String id) {
+        Intent i = new Intent(this, AppPickerActivity.class);
+        if (id != null) i.putExtra(AppPickerActivity.EXTRA_GROUP_ID, id);
+        startActivity(i);
+    }
+
+    /** Lista de grupos con su casilla para marcar cuáles se silencian. */
+    private void renderGroups() {
+        groupsContainer.removeAllViews();
+        LayoutInflater inf = getLayoutInflater();
+        for (Groups.Group g : Groups.getAll(this)) {
+            View row = inf.inflate(R.layout.item_group, groupsContainer, false);
+            ((TextView) row.findViewById(R.id.icon)).setText(g.icon);
+            ((TextView) row.findViewById(R.id.name)).setText(g.name);
+            ((TextView) row.findViewById(R.id.summary)).setText(groupSummary(g));
+            CheckBox check = row.findViewById(R.id.check);
+            check.setChecked(g.enabled);
+            final String id = g.id;
+            check.setOnCheckedChangeListener((b, checked) -> {
+                Groups.setEnabled(this, id, checked);
+                if (Prefs.isActive(this)) VacationNotificationListener.cleanNow();
+                VacationTileService.refresh(this);
+                refreshUi();
+            });
+            row.setOnClickListener(v -> openGroup(id));
+            groupsContainer.addView(row);
+        }
+    }
+
+    private String groupSummary(Groups.Group g) {
+        if (g.apps.isEmpty()) return "Sin apps todavía · toca para añadir";
+        StringBuilder sb = new StringBuilder(Util.plural(g.apps.size(), "app", "apps")).append(": ");
+        int i = 0;
+        for (String pkg : g.apps) {
+            if (i == 3) break;
+            if (i > 0) sb.append(", ");
+            sb.append(Util.appLabel(this, pkg));
+            i++;
+        }
+        if (g.apps.size() > 3) sb.append("…");
+        return sb.toString();
     }
 
     private void openListenerSettings() {
@@ -149,6 +200,84 @@ public class MainActivity extends Activity {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private static final int[] PRESET_MINUTES = {15, 30, 60, 120, 240, 480, 720, 1440};
+
+    private static String presetLabel(int minutes) {
+        return minutes < 60 ? minutes + " min" : (minutes / 60) + " h";
+    }
+
+    private void showCountdownDialog() {
+        View v = getLayoutInflater().inflate(R.layout.dialog_countdown, null);
+        LinearLayout presets = v.findViewById(R.id.presets);
+        final NumberPicker pickHours = v.findViewById(R.id.pickHours);
+        final NumberPicker pickMinutes = v.findViewById(R.id.pickMinutes);
+        pickHours.setMinValue(0);
+        pickHours.setMaxValue(99);
+        pickHours.setValue(1);
+        pickMinutes.setMinValue(0);
+        pickMinutes.setMaxValue(59);
+        pickMinutes.setValue(0);
+        pickMinutes.setFormatter(i -> String.format(Util.ES, "%02d", i));
+
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Cuenta atrás")
+                .setView(v)
+                .setPositiveButton("Empezar", (d, w) -> {
+                    int minutes = pickHours.getValue() * 60 + pickMinutes.getValue();
+                    if (minutes <= 0) {
+                        toast("Elige un tiempo mayor que 0");
+                        return;
+                    }
+                    startCountdown(minutes);
+                })
+                .setNegativeButton("Cancelar", null)
+                .create();
+
+        float dp = getResources().getDisplayMetrics().density;
+        LinearLayout row = null;
+        for (int i = 0; i < PRESET_MINUTES.length; i++) {
+            if (i % 4 == 0) {
+                row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                if (i > 0) rlp.topMargin = (int) (8 * dp);
+                presets.addView(row, rlp);
+            }
+            Button b = new Button(this);
+            b.setText(presetLabel(PRESET_MINUTES[i]));
+            b.setAllCaps(false);
+            b.setBackgroundResource(R.drawable.bg_btn_soft);
+            b.setTextColor(getColor(R.color.soft_text));
+            b.setStateListAnimator(null);
+            b.setMinWidth(0);
+            b.setMinimumWidth(0);
+            b.setMinHeight((int) (44 * dp));
+            b.setMinimumHeight((int) (44 * dp));
+            b.setPadding(0, 0, 0, 0);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            if (i % 4 != 0) lp.setMarginStart((int) (8 * dp));
+            final int minutes = PRESET_MINUTES[i];
+            b.setOnClickListener(x -> {
+                startCountdown(minutes);
+                dialog.dismiss();
+            });
+            row.addView(b, lp);
+        }
+        dialog.show();
+    }
+
+    private void startCountdown(int minutes) {
+        long ms = minutes * 60_000L;
+        VacationController.setCountdown(this, ms);
+        refreshUi();
+        if (Prefs.isActive(this)) {
+            toast("Se desactivará dentro de " + Util.formatDuration(ms));
+        } else {
+            toast("La cuenta atrás de " + Util.formatDuration(ms) + " empezará al activarlo");
         }
     }
 
@@ -213,27 +342,23 @@ public class MainActivity extends Activity {
             btnToggle.setTextColor(getColor(R.color.on_primary));
         }
 
-        // Apps
-        if (blocked.isEmpty()) {
-            txtAppsSummary.setText("Todavía no has elegido ninguna app.");
+        // Grupos
+        if (Groups.getAll(this).isEmpty()) {
+            txtAppsSummary.setText("Crea grupos (p. ej. «Redes sociales» o «Trabajo») y marca los que quieras silenciar.");
+        } else if (blocked.isEmpty()) {
+            txtAppsSummary.setText("Marca los grupos que quieres silenciar.");
         } else {
-            List<String> names = new ArrayList<>();
-            for (String pkg : blocked) names.add(Util.appLabel(this, pkg));
-            Collections.sort(names, Collator.getInstance(Util.ES));
-            int max = 6;
-            StringBuilder sb = new StringBuilder(Util.plural(blocked.size(), "app", "apps")).append(": ");
-            for (int i = 0; i < names.size() && i < max; i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(names.get(i));
-            }
-            if (names.size() > max) sb.append(" y ").append(names.size() - max).append(" más");
-            txtAppsSummary.setText(sb.toString());
+            txtAppsSummary.setText("Se silenciarán " + Util.plural(blocked.size(), "app", "apps") + ".");
         }
 
         // Fecha de fin
         if (end > 0) {
             txtEndTime.setText("Se apagará solo el " + Util.formatDateTime(end)
                     + " (" + Util.formatRemaining(end - now) + ").");
+            btnClearDate.setVisibility(View.VISIBLE);
+        } else if (Prefs.getPendingCountdown(this) > 0) {
+            txtEndTime.setText("Cuenta atrás de " + Util.formatDuration(Prefs.getPendingCountdown(this))
+                    + ": empezará a contar cuando actives el modo vacaciones.");
             btnClearDate.setVisibility(View.VISIBLE);
         } else {
             txtEndTime.setText("Sin fecha: seguirá activo hasta que lo desactives tú.");

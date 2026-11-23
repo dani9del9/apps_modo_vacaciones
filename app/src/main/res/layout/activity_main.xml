@@ -96,24 +96,31 @@
             android:minHeight="68dp"
             android:textSize="19sp" />
 
-        <!-- Apps silenciadas -->
+        <!-- Grupos de apps -->
         <LinearLayout style="@style/Card">
 
             <TextView
                 style="@style/CardTitle"
                 android:drawableStart="@drawable/ic_bell_off"
-                android:text="Apps silenciadas" />
+                android:text="Grupos a silenciar" />
 
             <TextView
                 android:id="@+id/txtAppsSummary"
                 style="@style/Body" />
 
+            <LinearLayout
+                android:id="@+id/groupsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
             <Button
-                android:id="@+id/btnChooseApps"
+                android:id="@+id/btnNewGroup"
                 style="@style/Btn.Soft"
                 android:layout_width="match_parent"
-                android:layout_marginTop="14dp"
-                android:text="Elegir apps" />
+                android:layout_marginTop="10dp"
+                android:text="＋  Nuevo grupo" />
         </LinearLayout>
 
         <!-- Fecha de fin -->
@@ -139,15 +146,23 @@
                     style="@style/Btn.Soft"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="Elegir fecha y hora" />
+                    android:text="Fecha y hora" />
 
                 <Button
-                    android:id="@+id/btnClearDate"
+                    android:id="@+id/btnCountdown"
                     style="@style/Btn.Soft"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_marginStart="10dp"
-                    android:text="Quitar" />
+                    android:layout_weight="1"
+                    android:text="Cuenta atrás" />
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btnClearDate"
+                style="@style/Btn.Soft"
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:text="Quitar" />
 
             <TextView
                 android:id="@+id/txtExactHint"
