@@ -102,10 +102,7 @@ public class AppPickerActivity extends Activity {
     private void save() {
         Prefs.setBlocked(this, selected);
         updateCount();
-        if (Prefs.isActive(this)) {
-            Notifier.showActive(this);
-            VacationNotificationListener.cleanNow();
-        }
+        if (Prefs.isActive(this)) VacationNotificationListener.cleanNow();
     }
 
     private void updateCount() {

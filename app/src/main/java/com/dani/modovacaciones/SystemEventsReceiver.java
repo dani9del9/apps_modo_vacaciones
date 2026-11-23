@@ -16,7 +16,6 @@ public class SystemEventsReceiver extends BroadcastReceiver {
             case "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED":
                 if (VacationController.isEffectivelyActive(c)) {
                     Scheduler.schedule(c);
-                    Notifier.showActive(c);
                 }
                 VacationTileService.refresh(c);
                 break;

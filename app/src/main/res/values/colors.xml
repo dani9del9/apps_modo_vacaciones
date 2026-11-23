@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#FFF6EC</color>
+    <!-- Paleta a juego con el logo (campana sobre menta) -->
+    <color name="bg">#F1FBF8</color>
     <color name="card">#FFFFFF</color>
-    <color name="text">#24303A</color>
-    <color name="sub">#6E7882</color>
-    <color name="sun">#FF7A45</color>
-    <color name="sea">#1A9DB0</color>
-    <color name="soft">#FFE6D9</color>
-    <color name="soft_text">#D4531F</color>
-    <color name="line">#EADFD3</color>
-    <color name="warn">#B3541E</color>
+    <color name="text">#17332E</color>
+    <color name="sub">#5E7A74</color>
+    <!-- sun = color principal (menta), sea = color de acento (coral) -->
+    <color name="sun">#239A83</color>
+    <color name="sea">#F2683A</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="soft">#DDF4EE</color>
+    <color name="soft_text">#1C7F6C</color>
+    <color name="line">#D3E9E3</color>
+    <color name="warn">#D9572A</color>
 </resources>

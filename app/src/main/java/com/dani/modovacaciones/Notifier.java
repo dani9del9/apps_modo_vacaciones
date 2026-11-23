@@ -6,11 +6,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Icon;
 
 import java.util.Map;
 
-/** Notificaciones propias: "modo vacaciones activo" y el resumen al terminar. */
+/** Notificación propia: solo el resumen al terminar (mientras está activo no se muestra nada). */
 public final class Notifier {
     private static final String CH_STATUS = "estado";
     private static final String CH_INFO = "avisos";
@@ -26,14 +25,10 @@ public final class Notifier {
     public static void ensureChannels(Context c) {
         NotificationManager nm = nm(c);
         if (nm == null) return;
-        NotificationChannel status = new NotificationChannel(CH_STATUS,
-                "Modo vacaciones activo", NotificationManager.IMPORTANCE_LOW);
-        status.setShowBadge(false);
-        status.setDescription("Aviso fijo mientras el modo vacaciones está encendido");
+        nm.deleteNotificationChannel(CH_STATUS); // canal antiguo del aviso fijo
         NotificationChannel info = new NotificationChannel(CH_INFO,
                 "Fin de las vacaciones", NotificationManager.IMPORTANCE_DEFAULT);
         info.setDescription("Resumen cuando se desactiva el modo vacaciones");
-        nm.createNotificationChannel(status);
         nm.createNotificationChannel(info);
     }
 
@@ -51,35 +46,6 @@ public final class Notifier {
         } catch (SecurityException ignored) {
             // Sin permiso POST_NOTIFICATIONS: no pasa nada, la app sigue funcionando
         }
-    }
-
-    public static void showActive(Context c) {
-        ensureChannels(c);
-        long end = Prefs.getEndTime(c);
-        String text = end > 0
-                ? "Hasta el " + Util.formatDateTime(end)
-                : "Hasta que lo desactives";
-        int n = Prefs.getBlocked(c).size();
-
-        Intent stop = new Intent(c, VacationReceiver.class).setAction(VacationReceiver.ACTION_STOP);
-        PendingIntent stopPi = PendingIntent.getBroadcast(c, 1, stop,
-                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Notification notif = new Notification.Builder(c, CH_STATUS)
-                .setSmallIcon(R.drawable.ic_stat_palm)
-                .setContentTitle("Modo vacaciones activo 🏝️")
-                .setContentText(text)
-                .setSubText(Util.plural(n, "app silenciada", "apps silenciadas"))
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setShowWhen(false)
-                .setColor(0xFFFF7A45)
-                .setContentIntent(openApp(c))
-                .addAction(new Notification.Action.Builder(
-                        Icon.createWithResource(c, R.drawable.ic_stat_palm),
-                        "Desactivar", stopPi).build())
-                .build();
-        post(c, ID_ACTIVE, notif);
     }
 
     public static void cancelActive(Context c) {
@@ -106,7 +72,7 @@ public final class Notifier {
                 .setContentTitle(automatic ? "Se acabaron las vacaciones 🧳" : "Modo vacaciones desactivado")
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
-                .setColor(0xFF1A9DB0)
+                .setColor(0xFF239A83)
                 .setAutoCancel(true)
                 .setContentIntent(openApp(c))
                 .build();

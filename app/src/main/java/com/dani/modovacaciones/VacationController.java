@@ -15,7 +15,7 @@ public final class VacationController {
 
         Scheduler.schedule(c);
         Notifier.cancelFinished(c);
-        Notifier.showActive(c);
+        Notifier.cancelActive(c); // sin aviso fijo mientras está activo
 
         // Por si el sistema había desconectado el servicio
         try {
@@ -52,7 +52,6 @@ public final class VacationController {
         Prefs.setEndTime(c, millis);
         if (Prefs.isActive(c)) {
             Scheduler.schedule(c);
-            Notifier.showActive(c);
         }
         VacationTileService.refresh(c);
     }

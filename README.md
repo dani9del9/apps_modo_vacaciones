@@ -5,7 +5,7 @@ App Android que quita las notificaciones de las apps que elijas desde que la act
 ## Qué hace
 
 - **Selector de apps**: lista todas las apps instaladas (con icono y buscador) para marcar las que no quieres que te molesten.
-- **Activar / desactivar** con un botón, desde el aviso fijo de la barra o desde el mosaico **«Vacaciones»** de ajustes rápidos.
+- **Activar / desactivar** con un botón o desde el mosaico **«Vacaciones»** de ajustes rápidos.
 - **Fecha y hora de fin**: se apaga sola en el momento que elijas.
 - **Resumen** al terminar: cuántas notificaciones se quitaron y de qué apps.
 - Sobrevive a reinicios del móvil.
