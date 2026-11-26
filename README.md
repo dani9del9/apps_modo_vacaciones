@@ -8,6 +8,7 @@ App Android que quita las notificaciones de las apps que elijas desde que la act
 - **Activar / desactivar** con un botón o desde el mosaico **«Vacaciones»** de ajustes rápidos.
 - **Fecha y hora de fin**: se apaga sola en el momento que elijas.
 - **Mientras estabas fuera**: al volver puedes ver todas las notificaciones quitadas (agrupadas por app, con su contenido). Se guardan solo en el móvil.
+- Elegir fecha/hora o cuenta atrás activa el modo vacaciones directamente.
 - Sobrevive a reinicios del móvil.
 
 Cómo funciona: usa el permiso de *Acceso a notificaciones* (`NotificationListenerService`). Cuando llega una notificación de una app marcada, la quita al momento. Al activarlo también limpia las que ya estaban en la barra. Las notificaciones fijas (música, llamadas en curso…) no se pueden quitar.

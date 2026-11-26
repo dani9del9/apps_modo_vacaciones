@@ -115,24 +115,33 @@ public class MainActivity extends Activity {
             VacationController.deactivate(this, false);
             toast("Modo vacaciones desactivado");
         } else {
-            if (!Util.hasListenerAccess(this)) {
-                toast("Primero dale acceso a las notificaciones");
-                openListenerSettings();
-                return;
-            }
-            if (Prefs.getBlocked(this).isEmpty()) {
-                if (Groups.getAll(this).isEmpty()) {
-                    toast("Crea un grupo con las apps que quieres silenciar");
-                    openGroup(null);
-                } else {
-                    toast("Marca al menos un grupo que tenga apps");
-                }
-                return;
-            }
-            VacationController.activate(this);
+            if (!tryActivate()) return;
             toast("¡Felices vacaciones! 🏖️");
         }
         refreshUi();
+    }
+
+    /**
+     * Activa el modo vacaciones si se puede (permiso de notificaciones y algún grupo con apps).
+     * Si falta algo, avisa, lleva a donde se arregla y devuelve false.
+     */
+    private boolean tryActivate() {
+        if (!Util.hasListenerAccess(this)) {
+            toast("Primero dale acceso a las notificaciones");
+            openListenerSettings();
+            return false;
+        }
+        if (Prefs.getBlocked(this).isEmpty()) {
+            if (Groups.getAll(this).isEmpty()) {
+                toast("Crea un grupo con las apps que quieres silenciar");
+                openGroup(null);
+            } else {
+                toast("Marca al menos un grupo que tenga apps");
+            }
+            return false;
+        }
+        VacationController.activate(this);
+        return true;
     }
 
     /** Abre el editor de grupos: id == null para crear uno nuevo. */
@@ -272,12 +281,13 @@ public class MainActivity extends Activity {
 
     private void startCountdown(int minutes) {
         long ms = minutes * 60_000L;
+        // Elegir cuenta atrás activa el modo vacaciones; si no se puede (falta permiso o grupos),
+        // la cuenta atrás se queda guardada y empezará al activarlo
         VacationController.setCountdown(this, ms);
+        if (!Prefs.isActive(this)) tryActivate();
         refreshUi();
         if (Prefs.isActive(this)) {
-            toast("Se desactivará dentro de " + Util.formatDuration(ms));
-        } else {
-            toast("La cuenta atrás de " + Util.formatDuration(ms) + " empezará al activarlo");
+            toast("Modo vacaciones activado · se desactivará dentro de " + Util.formatDuration(ms));
         }
     }
 
@@ -307,8 +317,12 @@ public class MainActivity extends Activity {
                     return;
                 }
                 VacationController.setEndTime(this, t);
+                // Elegir fecha activa el modo vacaciones (si falta permiso o grupos, se avisa y la fecha queda guardada)
+                if (!Prefs.isActive(this)) tryActivate();
                 refreshUi();
-                toast("Se desactivará el " + Util.formatDateTime(t));
+                if (Prefs.isActive(this)) {
+                    toast("Modo vacaciones activado · se desactivará el " + Util.formatDateTime(t));
+                }
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
         dp.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
